@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameMode {
+  SOLO
+  DUOS
+}
+
+enum CombatResult {
+  WIN
+  LOSS
+  TIE
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  battleTag    String   @unique @map("battle_tag")
+  battleNetId  String   @unique @map("battle_net_id")
+  clientSecret String?  @map("client_secret")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  matches    Match[]
+  mmrHistory MmrHistory[]
+
+  @@map("users")
+}
+
+model Match {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  gameMode        GameMode @map("game_mode")
+  heroCardId      String   @map("hero_card_id")
+  placement       Int      @db.SmallInt
+  mmrBefore       Int      @map("mmr_before")
+  mmrAfter        Int      @map("mmr_after")
+  turnCount       Int      @map("turn_count") @db.SmallInt
+  anomalyCardId   String?  @map("anomaly_card_id")
+  availableRaces  Int[]    @map("available_races")
+  startedAt       DateTime @map("started_at")
+  endedAt         DateTime @map("ended_at")
+  clientSignature String?  @map("client_signature")
+
+  user       User            @relation(fields: [userId], references: [id])
+  opponents  MatchOpponent[]
+  turns      MatchTurn[]
+  mmrHistory MmrHistory[]
+
+  @@index([userId])
+  @@index([heroCardId])
+  @@index([startedAt])
+  @@map("matches")
+}
+
+model MatchOpponent {
+  id              String @id @default(uuid()) @db.Uuid
+  matchId         String @map("match_id") @db.Uuid
+  playerIdInGame  Int    @map("player_id_in_game") @db.SmallInt
+  heroCardId      String @map("hero_card_id")
+  tavernTier      Int    @map("tavern_tier") @db.SmallInt
+  lastKnownBoard  Json?  @map("last_known_board")
+  damageDealt     Int    @map("damage_dealt") @db.SmallInt
+  damageTaken     Int    @map("damage_taken") @db.SmallInt
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@map("match_opponents")
+}
+
+model MatchTurn {
+  id           String        @id @default(uuid()) @db.Uuid
+  matchId      String        @map("match_id") @db.Uuid
+  turnNumber   Int           @map("turn_number") @db.SmallInt
+  tavernTier   Int           @map("tavern_tier") @db.SmallInt
+  health       Int           @db.SmallInt
+  boardState   Json?         @map("board_state")
+  combatResult CombatResult? @map("combat_result")
+  damageDelta  Int           @map("damage_delta") @db.SmallInt
+  timestamp    DateTime
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@index([timestamp])
+  @@map("match_turns")
+}
+
+model MmrHistory {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  gameMode   GameMode @map("game_mode")
+  mmr        Int
+  matchId    String?  @map("match_id") @db.Uuid
+  recordedAt DateTime @map("recorded_at")
+
+  user  User   @relation(fields: [userId], references: [id])
+  match Match? @relation(fields: [matchId], references: [id])
+
+  @@index([userId, gameMode])
+  @@index([recordedAt])
+  @@map("mmr_history")
+}

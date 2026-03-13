@@ -1,0 +1,22 @@
+{
+  "name": "@bg-tracker/log-parser",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "log-parser",
+    "triples": {
+      "defaults": false,
+      "additional": ["x86_64-pc-windows-msvc"]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "clean": "rm -rf target *.node"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  }
+}
