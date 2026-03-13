@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: bg-tracker-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bgtracker
+      POSTGRES_PASSWORD: bgtracker_dev
+      POSTGRES_DB: bg_tracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: bg-tracker-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -22,9 +22,9 @@ model User {
   id           String   @id @default(uuid()) @db.Uuid
   battleTag    String   @unique @map("battle_tag")
   battleNetId  String   @unique @map("battle_net_id")
-  clientSecret String?  @map("client_secret")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  clientSecret String?  @map("client_secret") // bcrypt hash
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   matches    Match[]
   mmrHistory MmrHistory[]
@@ -43,30 +43,29 @@ model Match {
   turnCount       Int      @map("turn_count") @db.SmallInt
   anomalyCardId   String?  @map("anomaly_card_id")
   availableRaces  Int[]    @map("available_races")
-  startedAt       DateTime @map("started_at")
-  endedAt         DateTime @map("ended_at")
-  clientSignature String?  @map("client_signature")
+  startedAt       DateTime @map("started_at") @db.Timestamptz
+  endedAt         DateTime @map("ended_at") @db.Timestamptz
+  clientSignature String   @map("client_signature")
 
   user       User            @relation(fields: [userId], references: [id])
   opponents  MatchOpponent[]
   turns      MatchTurn[]
   mmrHistory MmrHistory[]
 
-  @@index([userId])
-  @@index([heroCardId])
-  @@index([startedAt])
+  @@index([userId, startedAt(sort: Desc)])
+  @@index([heroCardId, gameMode])
   @@map("matches")
 }
 
 model MatchOpponent {
-  id              String @id @default(uuid()) @db.Uuid
-  matchId         String @map("match_id") @db.Uuid
-  playerIdInGame  Int    @map("player_id_in_game") @db.SmallInt
-  heroCardId      String @map("hero_card_id")
-  tavernTier      Int    @map("tavern_tier") @db.SmallInt
-  lastKnownBoard  Json?  @map("last_known_board")
-  damageDealt     Int    @map("damage_dealt") @db.SmallInt
-  damageTaken     Int    @map("damage_taken") @db.SmallInt
+  id             String @id @default(uuid()) @db.Uuid
+  matchId        String @map("match_id") @db.Uuid
+  playerIdInGame Int    @map("player_id_in_game") @db.SmallInt
+  heroCardId     String @map("hero_card_id")
+  tavernTier     Int    @map("tavern_tier") @db.SmallInt
+  lastKnownBoard Json   @map("last_known_board") @db.JsonB
+  damageDealt    Int    @map("damage_dealt") @db.SmallInt
+  damageTaken    Int    @map("damage_taken") @db.SmallInt
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
@@ -75,20 +74,19 @@ model MatchOpponent {
 }
 
 model MatchTurn {
-  id           String        @id @default(uuid()) @db.Uuid
-  matchId      String        @map("match_id") @db.Uuid
-  turnNumber   Int           @map("turn_number") @db.SmallInt
-  tavernTier   Int           @map("tavern_tier") @db.SmallInt
-  health       Int           @db.SmallInt
-  boardState   Json?         @map("board_state")
-  combatResult CombatResult? @map("combat_result")
-  damageDelta  Int           @map("damage_delta") @db.SmallInt
-  timestamp    DateTime
+  id           String       @id @default(uuid()) @db.Uuid
+  matchId      String       @map("match_id") @db.Uuid
+  turnNumber   Int          @map("turn_number") @db.SmallInt
+  tavernTier   Int          @map("tavern_tier") @db.SmallInt
+  health       Int          @db.SmallInt
+  boardState   Json         @map("board_state") @db.JsonB
+  combatResult CombatResult @map("combat_result")
+  damageDelta  Int          @map("damage_delta") @db.SmallInt
+  timestamp    DateTime     @db.Timestamptz
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
-  @@index([matchId])
-  @@index([timestamp])
+  @@index([matchId, turnNumber])
   @@map("match_turns")
 }
 
@@ -97,13 +95,13 @@ model MmrHistory {
   userId     String   @map("user_id") @db.Uuid
   gameMode   GameMode @map("game_mode")
   mmr        Int
-  matchId    String?  @map("match_id") @db.Uuid
-  recordedAt DateTime @map("recorded_at")
+  matchId    String   @map("match_id") @db.Uuid
+  recordedAt DateTime @map("recorded_at") @db.Timestamptz
 
-  user  User   @relation(fields: [userId], references: [id])
-  match Match? @relation(fields: [matchId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  match Match @relation(fields: [matchId], references: [id])
 
-  @@index([userId, gameMode])
-  @@index([recordedAt])
+  @@index([userId, recordedAt(sort: Desc)])
+  @@index([userId, gameMode, recordedAt(sort: Desc)])
   @@map("mmr_history")
 }
