@@ -51,6 +51,10 @@ pub struct Minion {
     pub attacks_per_round: i32,
     /// Whether the reborn has already been consumed
     pub reborn_consumed: bool,
+    /// Tracks when the minion was placed on the board (for deathrattle ordering)
+    pub summon_order: usize,
+    /// Flag for poisonous kills — marked for destruction even if health > 0
+    pub pending_destroy: bool,
 }
 
 impl Minion {
@@ -84,6 +88,8 @@ impl Minion {
             has_attacked: false,
             attacks_per_round,
             reborn_consumed: false,
+            summon_order: 0,
+            pending_destroy: false,
         }
     }
 
@@ -105,11 +111,33 @@ impl Minion {
         !self.is_alive()
     }
 
-    /// Check whether this minion is still alive.
-    ///
-    /// A minion is alive if its effective health (health - damage) is > 0.
+    /// Deal damage from a poisonous/venomous source.
+    /// If the source is poisonous or venomous and damage is dealt (not absorbed
+    /// by divine shield), mark the minion for pending destruction.
+    pub fn take_damage_from_poisonous(&mut self, amount: i32) -> bool {
+        if amount <= 0 {
+            return false;
+        }
+
+        if self.divine_shield {
+            self.divine_shield = false;
+            return false;
+        }
+
+        self.damage += amount;
+        // Poisonous kills regardless of remaining health
+        self.pending_destroy = true;
+        true
+    }
+
+    /// Check whether this minion is still alive (health > 0 and not pending destruction).
     pub fn is_alive(&self) -> bool {
         self.health - self.damage > 0
+    }
+
+    /// Check if this minion should be considered dead (not alive or pending destroy).
+    pub fn is_dead(&self) -> bool {
+        !self.is_alive() || self.pending_destroy
     }
 
     /// Get the effective (remaining) health of this minion.
@@ -121,6 +149,20 @@ impl Minion {
     pub fn reset_attack_state(&mut self) {
         self.has_attacked = false;
     }
+
+    /// Apply reborn: resummon at 1 health with reborn consumed.
+    /// Clears pending_destroy, resets damage so effective health = 1,
+    /// removes divine_shield, marks reborn_consumed.
+    pub fn apply_reborn(&mut self) {
+        if self.reborn && !self.reborn_consumed {
+            // Set damage so that effective health = 1
+            self.damage = self.health - 1;
+            self.divine_shield = false;
+            self.reborn_consumed = true;
+            self.pending_destroy = false;
+            self.has_attacked = false;
+        }
+    }
 }
 
 /// Trait for minions with special combat effects.
@@ -128,49 +170,28 @@ impl Minion {
 /// Implementing this trait allows a minion to hook into various
 /// combat events. Not all minions need special effects; those that
 /// do should implement only the relevant methods.
-///
-/// # TODO
-/// Implement specific minion effects by card_id lookup. Each method
-/// receives the combat state and can modify it (buff allies, damage
-/// enemies, summon tokens, etc.).
 pub trait MinionEffect {
     /// Called when this minion attacks.
-    ///
-    /// # TODO
-    /// - Implement effects like "whenever this attacks" triggers
     fn on_attack(&self, _attacker: &Minion, _defender: &Minion) {
         // Default: no special effect
     }
 
     /// Called when this minion takes damage (after Divine Shield check).
-    ///
-    /// # TODO
-    /// - Implement effects like "whenever this takes damage" triggers
     fn on_damage(&self, _target: &Minion, _amount: i32) {
         // Default: no special effect
     }
 
     /// Called when this minion dies.
-    ///
-    /// # TODO
-    /// - Implement deathrattle effects
-    /// - Handle Reborn resummon
     fn on_death(&self, _minion: &Minion) {
         // Default: no special effect
     }
 
     /// Called when a minion is summoned to the board.
-    ///
-    /// # TODO
-    /// - Implement "whenever a minion is summoned" triggers
     fn on_summon(&self, _summoned: &Minion) {
         // Default: no special effect
     }
 
     /// Called at the start of combat (before any attacks).
-    ///
-    /// # TODO
-    /// - Implement start-of-combat effects (e.g., Red Whelp)
     fn on_start_of_combat(&self) {
         // Default: no special effect
     }

@@ -1,0 +1,282 @@
+{
+  "testCases": [
+    {
+      "name": "1/1 vs 1/1 - should be ~50% tie",
+      "input": {
+        "player": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "TestMinion1",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "opponent": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "TestMinion2",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "available_races": [],
+        "anomaly_card_id": null,
+        "turn": 1
+      },
+      "expected": {
+        "tie_rate_min": 0.9,
+        "tie_rate_max": 1.0,
+        "description": "Two 1/1 minions always trade, resulting in a tie"
+      }
+    },
+    {
+      "name": "2/2 vs 1/1 - player always wins",
+      "input": {
+        "player": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "StrongMinion",
+              "attack": 2,
+              "health": 2,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "opponent": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "WeakMinion",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "available_races": [],
+        "anomaly_card_id": null,
+        "turn": 1
+      },
+      "expected": {
+        "win_rate_min": 0.99,
+        "win_rate_max": 1.0,
+        "description": "2/2 always beats 1/1, surviving with 1 health"
+      }
+    },
+    {
+      "name": "Taunt targeting - taunt should be attacked first",
+      "input": {
+        "player": {
+          "health": 30,
+          "tier": 2,
+          "board": [
+            {
+              "card_id": "Attacker",
+              "attack": 10,
+              "health": 10,
+              "damage": 0,
+              "golden": false,
+              "tier": 2,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "opponent": {
+          "health": 30,
+          "tier": 2,
+          "board": [
+            {
+              "card_id": "NonTaunt",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            },
+            {
+              "card_id": "TauntMinion",
+              "attack": 1,
+              "health": 100,
+              "damage": 0,
+              "golden": false,
+              "tier": 2,
+              "race": 0,
+              "taunt": true,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "available_races": [],
+        "anomaly_card_id": null,
+        "turn": 3
+      },
+      "expected": {
+        "loss_rate_min": 0.99,
+        "loss_rate_max": 1.0,
+        "description": "10/10 attacks into 1/100 taunt, can never kill it, opponent wins"
+      }
+    },
+    {
+      "name": "Divine Shield test",
+      "input": {
+        "player": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "ShieldMinion",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": true,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "opponent": {
+          "health": 30,
+          "tier": 1,
+          "board": [
+            {
+              "card_id": "PlainMinion",
+              "attack": 1,
+              "health": 1,
+              "damage": 0,
+              "golden": false,
+              "tier": 1,
+              "race": 0,
+              "taunt": false,
+              "divine_shield": false,
+              "poisonous": false,
+              "venomous": false,
+              "windfury": false,
+              "mega_windfury": false,
+              "stealth": false,
+              "reborn": false,
+              "cleave": false
+            }
+          ],
+          "hero_power_card_id": null,
+          "hero_power_activated": false
+        },
+        "available_races": [],
+        "anomaly_card_id": null,
+        "turn": 1
+      },
+      "expected": {
+        "win_rate_min": 0.99,
+        "win_rate_max": 1.0,
+        "description": "1/1 divine shield always beats 1/1 plain"
+      }
+    }
+  ]
+}

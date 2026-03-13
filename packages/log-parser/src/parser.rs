@@ -35,6 +35,12 @@ static RE_FULL_ENTITY: Lazy<Regex> = Lazy::new(|| {
         .expect("Invalid FullEntity regex")
 });
 
+/// Matches SHOW_ENTITY lines: `SHOW_ENTITY - Updating Entity=<entity> CardID=<card_id>`
+static RE_SHOW_ENTITY: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"SHOW_ENTITY\s+-\s+Updating\s+Entity=(.+)\s+CardID=(\w*)")
+        .expect("Invalid ShowEntity regex")
+});
+
 /// Matches BLOCK_START lines: `BLOCK_START BlockType=<type> Entity=<entity> ...`
 static RE_BLOCK_START: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"BLOCK_START\s+BlockType=(\w+)\s+Entity=(.+?)\s+")
@@ -78,6 +84,11 @@ pub enum ParsedEvent {
         card_id: String,
         player: i32,
     },
+    /// A show entity update (reveals card identity)
+    ShowEntity {
+        entity: String,
+        card_id: String,
+    },
     /// Start of a power block
     BlockStart {
         block_type: String,
@@ -110,9 +121,10 @@ impl LogLineParser {
     /// Lines are tried against patterns in priority order:
     /// 1. TAG_CHANGE (most frequent)
     /// 2. FULL_ENTITY
-    /// 3. BLOCK_START / BLOCK_END
-    /// 4. GameEntity / PlayerEntity
-    /// 5. CreationTag (indented tag lines)
+    /// 3. SHOW_ENTITY
+    /// 4. BLOCK_START / BLOCK_END
+    /// 5. GameEntity / PlayerEntity
+    /// 6. CreationTag (indented tag lines)
     pub fn parse_line(&self, line: &str) -> Option<ParsedEvent> {
         // TAG_CHANGE is the most frequent event, check first
         if let Some(caps) = RE_TAG_CHANGE.captures(line) {
@@ -132,6 +144,14 @@ impl LogLineParser {
                 zone_pos: caps[4].parse().unwrap_or(0),
                 card_id: caps[5].to_string(),
                 player: caps[6].parse().unwrap_or(0),
+            });
+        }
+
+        // SHOW_ENTITY - entity reveal
+        if let Some(caps) = RE_SHOW_ENTITY.captures(line) {
+            return Some(ParsedEvent::ShowEntity {
+                entity: caps[1].to_string(),
+                card_id: caps[2].to_string(),
             });
         }
 

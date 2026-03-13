@@ -14,9 +14,11 @@
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "clean": "rm -rf target *.node"
+    "clean": "rm -rf target *.node",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.0"
+    "@napi-rs/cli": "^2.18.0",
+    "vitest": "^3.0.0"
   }
 }

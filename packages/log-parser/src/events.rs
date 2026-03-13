@@ -5,14 +5,15 @@
 //! sent across the FFI boundary to the Node.js callback.
 
 use napi::bindgen_prelude::*;
-use napi_derive::napi;
+use serde::Serialize;
 
 /// All Battlegrounds events that can be emitted to the Node.js layer.
 ///
 /// Each variant carries the relevant payload fields. The `to_js_object`
 /// method serializes the event into a plain JS object with a `type` field
 /// and event-specific data fields.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
 pub enum BgEvent {
     GameStarted {
         game_mode: String,
@@ -58,9 +59,44 @@ pub enum BgEvent {
     AnomalyDetected {
         card_id: String,
     },
+    TriplesUpdated {
+        player_id: i32,
+        count: i32,
+    },
+    TurnChanged {
+        turn: i32,
+    },
+    PhaseChanged {
+        phase: String,
+    },
 }
 
 impl BgEvent {
+    /// Serialize this event to a JSON string.
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+
+    /// Return the event variant name as a string.
+    pub fn event_type(&self) -> &str {
+        match self {
+            BgEvent::GameStarted { .. } => "GameStarted",
+            BgEvent::HeroOffered { .. } => "HeroOffered",
+            BgEvent::HeroSelected { .. } => "HeroSelected",
+            BgEvent::TavernTierChanged { .. } => "TavernTierChanged",
+            BgEvent::CombatStarted { .. } => "CombatStarted",
+            BgEvent::CombatEnded { .. } => "CombatEnded",
+            BgEvent::BoardStateSnapshot { .. } => "BoardStateSnapshot",
+            BgEvent::OpponentInfoUpdated { .. } => "OpponentInfoUpdated",
+            BgEvent::GameEnded { .. } => "GameEnded",
+            BgEvent::RacesAvailable { .. } => "RacesAvailable",
+            BgEvent::AnomalyDetected { .. } => "AnomalyDetected",
+            BgEvent::TriplesUpdated { .. } => "TriplesUpdated",
+            BgEvent::TurnChanged { .. } => "TurnChanged",
+            BgEvent::PhaseChanged { .. } => "PhaseChanged",
+        }
+    }
+
     /// Convert this event into a napi-compatible JS object.
     ///
     /// The returned object always has a `type` field (string) identifying
@@ -147,6 +183,19 @@ impl BgEvent {
             BgEvent::AnomalyDetected { card_id } => {
                 obj.set("type", "AnomalyDetected")?;
                 obj.set("cardId", card_id.as_str())?;
+            }
+            BgEvent::TriplesUpdated { player_id, count } => {
+                obj.set("type", "TriplesUpdated")?;
+                obj.set("playerId", *player_id)?;
+                obj.set("count", *count)?;
+            }
+            BgEvent::TurnChanged { turn } => {
+                obj.set("type", "TurnChanged")?;
+                obj.set("turn", *turn)?;
+            }
+            BgEvent::PhaseChanged { phase } => {
+                obj.set("type", "PhaseChanged")?;
+                obj.set("phase", phase.as_str())?;
             }
         }
 
