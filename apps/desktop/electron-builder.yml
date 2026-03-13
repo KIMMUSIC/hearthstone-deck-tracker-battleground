@@ -1,0 +1,30 @@
+appId: com.bg-tracker.desktop
+productName: BG Tracker
+directories:
+  output: dist-release
+  buildResources: resources
+win:
+  target:
+    - nsis
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+extraResources:
+  - from: "../../packages/log-parser/*.node"
+    to: "native-addons/"
+  - from: "../../packages/combat-sim/*.node"
+    to: "native-addons/"
+asar: true
+asarUnpack:
+  - "native-addons/**"
+files:
+  - "dist/**/*"
+  - "dist-electron/**/*"
+  - "!node_modules"
+publish:
+  provider: github
+  owner: KIMMUSIC
+  repo: hearthstone-deck-tracker-battleground

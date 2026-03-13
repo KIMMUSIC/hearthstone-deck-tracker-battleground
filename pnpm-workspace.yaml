@@ -3,3 +3,22 @@ packages:
   - "apps/*"
   - "infra/*"
   - "tools/*"
+allowBuilds:
+  '"': true
+  ',': true
+  '[': true
+  ']': true
+  b: true
+  c: true
+  d: true
+  e: true
+  f: true
+  i: true
+  k: true
+  l: true
+  n: true
+  o: true
+  r: true
+  s: true
+  t: true
+  u: true
